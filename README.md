@@ -39,28 +39,30 @@ $ rm -rf _build && rebar3 get-deps && time rebar3 eunit
 On a MacStudio M1, the following values are reported (average
 of 5 runs):
 
-| Language | Time |
-|----------|------|
+| Language | Time on Erlang/OTP 28 |
+|----------|-----------------------|
 | Elixir v1.19 | ~0.73s |
-| Elixir v1.20 | ~0.63s |
-| Elixir v1.20 (interpreted defmodule) | ~0.58s |
+| Elixir v1.20-rc.2 | ~0.63s |
+| Elixir v1.20-rc.2 ([interpreted defmodule](https://github.com/elixir-lang/elixir/pull/15087)) | ~0.58s |
 | Erlang (`rebar3`) | ~0.72s |
 | Gleam v1.14 | ~0.71s |
 
-All measurements above were done on Erlang/OTP 28.1. However,
-[I have recently pushed a patch which improves boot times to
-Erlang/OTP](https://github.com/erlang/otp/pull/10615), which
-yields the following times:
+Additionally, [I have recently pushed a patch which improves
+boot times in Erlang/OTP](https://github.com/erlang/otp/pull/10615).
+Here are the updated measurements:
 
-| Language | Time |
-|----------|------|
+| Language | Time on Erlang/OTP 29 |
+|----------|-----------------------|
 | Elixir v1.19 | ~0.65s |
-| Elixir v1.20 | ~0.55s |
-| Elixir v1.20 (interpreted defmodule) | ~0.50s |
+| Elixir v1.20-rc.2 | ~0.55s |
+| Elixir v1.20-rc.2 ([interpreted defmodule](https://github.com/elixir-lang/elixir/pull/15087)) | ~0.50s |
 | Erlang (`rebar3`) | ~0.64s |
 | Gleam v1.14 | ~0.67s |
 
-At the time of writing, Elixir v1.20 offers the best performance
+As you can see, the pull request improved the timing across
+the board! 🎉
+
+At the time of writing, Elixir v1.20-rc.2 offers the best performance
 across both Erlang/OTP versions, with the new [interpreted module
 definition](https://github.com/elixir-lang/elixir/pull/15087)
 as more than 20% faster than other language tooling.
