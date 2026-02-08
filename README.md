@@ -4,7 +4,7 @@ This repository contains synthetic benchmarks of compilation times
 across BEAM languages (currently Elixir, Erlang, and Gleam), with the goal
 to publicly quantify performance claims.
 
-## `benchmark_*`
+## `benchmark_{language}`
 
 It measures the time to compile 100 independent modules with 100 hello
 world functions each, boot the application, and run a minimal test suite.
@@ -51,7 +51,7 @@ showing it 20% faster than other tools.
 
 All measurements were done on Erlang/OTP 28.1.
 
-## `incremental_*`
+## `incremental_{language}`
 
 The goal of this benchmark is to observe the impact of dependencies
 between modules in languages and assess how their incremental compilation
