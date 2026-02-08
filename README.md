@@ -97,23 +97,25 @@ This happens because Elixir can actually distinguish between the two
 types of dependencies, compile-time and runtime dependencies,
 while Gleam v1.14 treats all dependencies as compile-time dependencies.
 
+In practice, most Elixir projects will have compile-time dependencies,
+and you can manipulate the Elixir repository to understand their impact.
+For example, by making it so A51 depends on A52 at compile-time (to do so,
+simply call `A52.hello1` in A51's module body), you will notice that changing
+any file from A52 to A100 now causes A51 to recompile, but no additional file.
+This is because runtime dependencies effectively act as a break mechanism
+to avoid recompilation.
+
 On the other hand, Erlang only has runtime dependencies (except for
 parse transforms but they are rarely used in practice), and therefore is
 the one with best incremental performance of all languages here:
 changing a file only causes that file to be recompiled.
 
-You can manipulate the Elixir repository to understand the impact of
-compile-time dependencies. For example, by making it so A51 depends on A52
-at compile-time (to do so, simply call `A52.hello1` in A51's module body),
-you will notice that changing any file from A52 to A100 now causes A51 to
-recompile, but no additional file. This is because runtime dependencies
-effectively act as a break mechanism to avoid recompilation.
-
 When it comes to cycles, Gleam cannot have cycles between modules,
 while Erlang and Elixir allow so (as long as the cycles are not exclusively
 made of compile-time edges). However, the cycles do not change how compile-time
 and runtime dependencies propagate: even if A100 depends on A1, forming a cycle,
-changing A100 will still only cause A51 to recompile.
+and A51 depends on A52 at compile-time, changing A100 will still only cause
+A51 to recompile.
 
 Overall:
 
