@@ -86,32 +86,34 @@ types:
 * Runtime dependencies: callers of a module do not need to recompile
   when said module changes
 
-In this benchmark, we have modified the first benchmark so one module
-calls functions in subsequent modules: `A1 -> A2 -> ... -> A100`.
+In this benchmark, we have modified the benchmark above so each module
+calls functions in the subsequent module: `A1 -> A2 -> ... -> A100`.
 The benchmarks show that:
 
 * Changing a100 in Gleam requires all other modules to compile
 * Changing A100 in Elixir requires no other modules to compile
 
 This happens because Elixir can actually distinguish between the two
-types of dependencies: compile-time and runtime dependencies,
+types of dependencies, compile-time and runtime dependencies,
 while Gleam v1.14 treats all dependencies as compile-time dependencies.
 
 On the other hand, Erlang only has runtime dependencies (except for
 parse transforms but they are rarely used in practice), and therefore is
-the one with best incremental performance of all languages here.
+the one with best incremental performance of all languages here:
+changing a file only causes that file to be recompiled.
+
+You can manipulate the Elixir repository to understand the impact of
+compile-time dependencies. For example, by making it so A51 depends on A52
+at compile-time (to do so, simply call `A52.hello1` in A51's module body),
+you will notice that changing any file from A52 to A100 now causes A51 to
+recompile, but no additional file. This is because runtime dependencies
+effectively act as a break mechanism to avoid recompilation.
 
 When it comes to cycles, Gleam cannot have cycles between modules,
 while Erlang and Elixir allow so (as long as the cycles are not exclusively
-made of compile-time edges).
-
-You can manipulate the Elixir repository to understand the impact of cycles
-and compile-time dependencies. For example, by making it so A100 depends on A1
-(creating a cycle) and making it so A1 depends on A2 at compile-time
-(simply call A2 in A1 module body), you will notice changing A100 doesn't
-force the whole cycle to be recompiled, only compile-time dependencies are.
-This is because runtime dependencies effectively act as a break mechanism
-to avoid recompilation.
+made of compile-time edges). However, the cycles do not change how compile-time
+and runtime dependencies propagate: even if A100 depends on A1, forming a cycle,
+changing A100 will still only cause A51 to recompile.
 
 Overall:
 
@@ -121,15 +123,16 @@ Overall:
 | Elixir | Runtime + Compile-time | Yes | Moderate |
 | Gleam | Compile-time only | No | Highest |
 
-The next section provides a more in-depth analysis on a balanced tree as an example.
+The next section provides a more in-depth analysis on a balanced tree so it is
+easier to visualize those dependencies.
 
 ### Incremental compilation averages
 
-To try to better visualize the impact of dependencies in both, let's consider
-a small tree. We will use a balanced tree cause it is easier to visualize it.
+To try to better visualize the impact of dependencies in different languages,
+let's consider a small tree. We will use a balanced tree to simplify the example.
 
-Imagine you have this file structure, A1/A2/A3 depends on A which depends on R
-and so on:
+Imagine you have a file structure where A1/A2/A3 depends on A which depends on
+R (root) and so on:
 
 ```mermaid
 graph BT
@@ -151,11 +154,11 @@ In Gleam, if you change R, all nodes downstream are compiled. If you change A,
 A1/A2/A3 are recompiled. And so on. So if you change a file at random, the average
 amount of files recompiled per change is `(13 + 3*4 + 9*1) / 13`, which is 2.61.
 
-However, in Elixir, it won't propagate unless you have compile-time dependencies,
-so the default average is 1. But apps will certainly have compile-time dependencies
-too, so let's imagine `A`, `B`, and `C` depend on `R` as a compile-time dependency
-(like Phoenix apps all have `use MyAppWeb, :controller`) and mark it in red. We end-up
-with this:
+However, in Elixir, only compile-time dependencies are recompiled, so if you have no
+compile-time dependnecy, the default average is 1 (the same as Erlang). But apps will
+certainly have compile-time dependencies too, so let's imagine `A`, `B`, and `C` depend
+on `R` as a compile-time dependency (like Phoenix apps all have `use MyAppWeb, :controller`)
+and mark it in red. We end-up with this:
 
 ```mermaid
 graph BT
@@ -181,7 +184,7 @@ This makes it so 3 out of 12 edges are compile-time edges.
 > project has a ratio of 17% compile-time edges per runtime ones,
 > so the rate above of 25% is higher than the one found in real-world project.
 
-Now, when R changes, it compiles A, B and C, but that's the only change. This is
+Now, when R changes, it compiles A, B, and C, but that's the only change. This is
 because any runtime dependency stops the compilation from propagating. Our
 recompilations per file average then becomes `(4 + 3*1 + 9*1) / 13`, which is 1.23.
 Less than half of Gleam's.
