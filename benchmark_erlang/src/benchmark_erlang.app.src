@@ -1,0 +1,8 @@
+{application, benchmark_erlang,
+ [{description, "Compilation time benchmark"},
+  {vsn, "0.1.0"},
+  {registered, []},
+  {applications, [kernel, stdlib]},
+  {env, []},
+  {modules, []}
+ ]}.
