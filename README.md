@@ -62,10 +62,14 @@ Here are the updated measurements:
 As you can see, the pull request improved the timing across
 the board! 🎉
 
-At the time of writing, Elixir v1.20-rc.2 offers the best performance
+At the time of writing, Elixir v1.20-rc.2 yields the best results
 across both Erlang/OTP versions, with the new [interpreted module
 definition](https://github.com/elixir-lang/elixir/pull/15087)
-as more than 20% faster than other language tooling.
+as more than 20% faster. Of course, this doesn't mean an Elixir
+project will compile faster than an equally sized project in Gleam
+or Erlang, as there are additional variables beyond raw compiler
+performance, but it does provide a baseline for comparisons and
+future optimizations.
 
 ## `incremental_{language}`
 
