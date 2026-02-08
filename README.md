@@ -9,6 +9,9 @@ to publicly quantify performance claims.
 It measures the time to compile 100 independent modules with 100 hello
 world functions each, boot the application, and run a minimal test suite.
 
+We list the steps for each language. The goal is measure the time to
+compile the project after dependencies have been analyzed and compiled.
+
 To compute times in Gleam:
 
 ``` 
@@ -30,7 +33,7 @@ To compute times in Erlang:
 ```
 $ cd benchmark_erlang
 $ rebar3 eunit
-$ rm -rf _build && time rebar3 eunit
+$ rm -rf _build && rebar3 get-deps && time rebar3 eunit
 ```
 
 On a MacStudio M1, the following values are reported (average
@@ -41,15 +44,26 @@ of 5 runs):
 | Elixir v1.19 | ~0.73s |
 | Elixir v1.20 | ~0.63s |
 | Elixir v1.20 (interpreted defmodule) | ~0.58s |
-| Erlang (`rebar3`) | ~0.74s |
+| Erlang (`rebar3`) | ~0.72s |
 | Gleam v1.14 | ~0.71s |
 
-At the time of writing, Elixir v1.20 offers the best performance
-(10% faster), with the new [interpreted module
-definition](https://github.com/elixir-lang/elixir/pull/15087)
-showing it 20% faster than other tools.
+All measurements above were done on Erlang/OTP 28.1. However,
+[I have recently pushed a patch which improves boot times to
+Erlang/OTP](https://github.com/erlang/otp/pull/10615), which
+yields the following times:
 
-All measurements were done on Erlang/OTP 28.1.
+| Language | Time |
+|----------|------|
+| Elixir v1.19 | ~0.65s |
+| Elixir v1.20 | ~0.55s |
+| Elixir v1.20 (interpreted defmodule) | ~0.50s |
+| Erlang (`rebar3`) | ~0.64s |
+| Gleam v1.14 | ~0.67s |
+
+At the time of writing, Elixir v1.20 offers the best performance
+across both Erlang/OTP versions, with the new [interpreted module
+definition](https://github.com/elixir-lang/elixir/pull/15087)
+as more than 20% faster than other language tooling.
 
 ## `incremental_{language}`
 
@@ -106,7 +120,7 @@ The next section provides a more in-depth analysis on a balanced tree as an exam
 ### Incremental compilation averages
 
 To try to better visualize the impact of dependencies in both, let's consider
-a small tree. We will use a balanced tree, cause it is easier to reason about.
+a small tree. We will use a balanced tree cause it is easier to visualize it.
 
 Imagine you have this file structure, A1/A2/A3 depends on A which depends on R
 and so on:
