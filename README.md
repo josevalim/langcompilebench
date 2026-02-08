@@ -1,7 +1,7 @@
 # Compilation time benchmarks of BEAM languages
 
 This repository contains synthetic benchmarks of compilation times
-across BEAM languages (currently Elixir and Gleam), with the goal
+across BEAM languages (currently Elixir, Erlang, and Gleam), with the goal
 to publicly quantify performance claims.
 
 ## `benchmark_*`
@@ -25,45 +25,83 @@ $ mix test
 $ rm -rf _build && time mix test
 ```
 
+To compute times in Erlang:
+
+```
+$ cd benchmark_erlang
+$ rebar3 eunit
+$ rm -rf _build && time rebar3 eunit
+```
+
 On a MacStudio M1, the following values are reported (average
 of 5 runs):
 
-| Gleam v1.14 | Elixir v1.19 | Elixir v1.20 | Elixir v1.20 (interpreted defmodule)
-|---|---|---|---|
-| ~0.78s | ~0.95s | ~0.80s | ~0.72s |
+| Language | Time |
+|----------|------|
+| Elixir v1.19 | ~0.73s |
+| Elixir v1.20 | ~0.63s |
+| Elixir v1.20 (interpreted defmodule) | ~0.58s |
+| Erlang (`rebar3`) | ~0.74s |
+| Gleam v1.14 | ~0.71s |
 
-The times between Gleam and Elixir are within the error margin.
-The [new interpreted module definition in Elixir v1.20](https://github.com/elixir-lang/elixir/pull/15087)
-makes it roughly 10% faster. All using Erlang/OTP 28.1.
+At the time of writing, Elixir v1.20 offers the best performance
+(10% faster), with the new [interpreted module
+definition](https://github.com/elixir-lang/elixir/pull/15087)
+showing it 20% faster than other tools.
 
-## `runtime_cycle_*`
+All measurements were done on Erlang/OTP 28.1.
 
-The goal of this benchmark is to observe the impact of compile-time
-dependencies in both languages and assess how their incremental
-compilation works.
+## `incremental_*`
 
-Both projects have a chain of 100 modules where `A1 -> A2 -> ... -> A100`.
-They show that:
+The goal of this benchmark is to observe the impact of dependencies
+between modules in languages and assess how their incremental compilation
+works.
+
+In broad terms, we can classify the dependencies between modules in two
+types:
+
+* Compile-time dependencies: force the callers of a module to recompile
+  when said module changes
+
+* Runtime dependencies: callers of a module do not need to recompile
+  when said module changes
+
+In this benchmark, we have modified the first benchmark so one module
+calls functions in subsequent modules: `A1 -> A2 -> ... -> A100`.
+The benchmarks show that:
 
 * Changing a100 in Gleam requires all other modules to compile
 * Changing A100 in Elixir requires no other modules to compile
 
-This happens because Elixir can actually distinguish between two
-types of dependencies: compile-time and runtime dependencies.
-Gleam v1.14 treats all dependencies as compile-time dependencies.
+This happens because Elixir can actually distinguish between the two
+types of dependencies: compile-time and runtime dependencies,
+while Gleam v1.14 treats all dependencies as compile-time dependencies.
 
-When it comes to cycles, making the Elixir modules a cycle does not
-change the results above, as long as they remain runtime depdendencies.
-On the other hand, Gleam cannot have cycles.
+On the other hand, Erlang only has runtime dependencies (except for
+parse transforms but they are rarely used in practice), and therefore is
+the one with best incremental performance of all languages here.
 
-Furthermore, you can manipulate the Elixir repository to understand
-the impact of compile-time dependencies. For example, by making it so
-A100 depends on A1 (creating a cycle) and making it so A1 depends on
-A2 at compile-time (simply call A2 in A1 module body), you will notice
-it doesn't force the cycle to recompile, only compile-time dependencies.
+When it comes to cycles, Gleam cannot have cycles between modules,
+while Erlang and Elixir allow so (as long as the cycles are not exclusively
+made of compile-time edges).
 
-Overall, we expect Gleam to recompile more files on each change.
-You can read the detailed explanation below for more information.
+You can manipulate the Elixir repository to understand the impact of cycles
+and compile-time dependencies. For example, by making it so A100 depends on A1
+(creating a cycle) and making it so A1 depends on A2 at compile-time
+(simply call A2 in A1 module body), you will notice changing A100 doesn't
+force the whole cycle to be recompiled, only compile-time dependencies are.
+This is because runtime dependencies effectively act as a break mechanism
+to avoid recompilation.
+
+Overall:
+
+| Language | Dependency types | Cycles allowed | Expected recompilations per change |
+|----------|------------------|----------------|------------------------------------|
+| Erlang | Runtime only | Yes | Lowest |
+| Elixir | Runtime + Compile-time | Yes | Moderate |
+| Gleam | Compile-time only | No | Highest |
+
+The next section provides a more in-depth analysis on a balanced tree as an example.
 
 ### Incremental compilation averages
 
