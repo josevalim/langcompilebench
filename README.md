@@ -253,7 +253,7 @@ It is possible to write macros that generate a lot of code which will
 have a negative impact on compile-time (which is in itself an
 [anti-pattern](https://elixir.hexdocs.pm/macro-anti-patterns.html#large-code-generation).
 On the other hand, macros can also be used to improve compilation times,
-either by treating code as data or by integrating with build tools.
+either by treating code as data or by integrating it into the compiler.
 We will explore both scenarios next.
 
 ### Code as data
@@ -320,16 +320,18 @@ compile() ->
 ```
 
 This encodes routes as data and allows us to provide the same optimizations
-and heuristics as macros. The above is still performing meta-programming,
-but using a different approach other than macros. Generally speaking,
-there are many ways to meta-program. We have seen how macros are integrated
-into the compiler, but it also matters how meta-programming is integrated into
-build tools.
+and heuristics as macros. The difference is that it now happens during
+initialization rather than compilation.
 
-### Meta-programming aware build tools
+Note the last example above is still performing meta-programming,
+but using a different approach than macros. Generally speaking,
+there are many ways to meta-program and there are benefits when it is
+integrated into the compiler. Let's see another example.
 
-Another example of how compiler macros can improve compilation times is via
-build-tool integration.
+### Meta-programming aware compiler
+
+Let's study another example of where macros can lead to improved
+compilation times due to the compiler integration.
 
 For example, let's look at how
 [Unicode generation is done in Erlang](https://github.com/erlang/otp/blob/master/lib/stdlib/uc_spec/gen_unicode_mod.escript)
@@ -361,9 +363,9 @@ emits code), the difference is that Elixir does it through Elixir AST, while Erl
 and Gleam do it via textual/source translation. For these reasons, Elixir requires
 fewest intermediate representations and fewest program invocations. Elixir goes as
 far as integrating [external resources into its build tool](https://elixir.hexdocs.pm/Module.html#module-external_resource),
-so Elixir knows exactly what to recompile whenever a SQL/Unicode file changes.
+so Elixir knows exactly what modules to recompile whenever a SQL/Unicode file changes.
 
-Note the analysis above is not meant to be a criticism to how Unicode or SQL generation
+Note the analysis above is not meant to be a criticism of how Unicode or SQL generation
 is done in Erlang or Gleam. Rather, our goal is to highlight that, while compiler macros
 can be abused by emitting unneeded code, they can also be used to augment compiler
 and build tool performance.
