@@ -236,3 +236,134 @@ compile-time and runtime dependencies, can reduce the amount of work
 on each incremental compilation. Gleam requires on average to recompile
 more files, as changes always forces callers to recompile, perhaps due
 to type reconstruction.
+
+## Addendum: compilation cost of macros
+
+One remaining question is: what is the cost incurred at compile-time
+by using compiler macros? As the ones found in Elixir?
+
+First of all, it is important to highlight that calling a macro itself
+is not expensive. Macros are just regular functions that receive code
+as data and, as part of compiling any file, the compiler will already
+call hundrends of thousands of functions. So the overhead of calling
+a macro is minimal.
+
+The cost of macros come from the amount of code it generates/returns.
+It is possible to write macros that generate a lot of code which will
+have a negative impact on compile-time (which is in itself an
+[anti-pattern](https://elixir.hexdocs.pm/macro-anti-patterns.html#large-code-generation).
+On the other hand, macros can also be used to improve compilation times,
+either by treating code as data or by integrating with build tools.
+We will explore both scenarios next.
+
+### Code as data
+
+Imagine that you are building a router for your web application.
+The most common format for dealing with those in BEAM languages is
+by pattern matching on a list representation of the request path.
+For example:
+
+```erlang
+% Handles /
+route([]) -> ...
+
+% Handles /comments
+route(["comments"]) -> ...
+
+% Handles /comments/:id
+route(["comments", Id]) -> ...
+```
+
+The benefit of using the format above is that the Erlang compiler
+will optimize the patterns into a binary tree for efficient runtime
+dispatching.
+
+Now imagine that, over time, your application grows to thousands of
+routes. Suddenly giving the Erlang compiler thousands of routes to
+optimize will increase compilation times non-linearly. If you want
+to address those issues, you now need to refactor your routes and
+entrypoints by grouping and reorganizing your clauses.
+
+However, if you use macros, you can use a declarative syntax:
+
+```elixir
+get "/", to: ...
+get "/comments", to: ...
+get "/comments/:id", to: ...
+```
+
+This allows you treat your routes as data and emit different code
+based on the amount and the contents of each route. You may group
+them by HTTP verb or by route prefix, provide heuristics based on
+the size, and generally optimize the code given to the Erlang
+compiler without changing any of your routes declaration.
+
+For completeness, those benefits are not tied to macros. For example,
+an Erlang web framework could allow you to define routes as data using
+pure functions, as below:
+
+```erlang
+routes() ->
+  [
+    #{verb => get, route => "/", to => ...},
+    #{verb => get, route => "/comments", to => ...},
+    #{verb => get, route => "/comments/id", to => ...},
+  ].
+```
+
+And now, when your application initializes in test or prod, it can
+compile those routes into a module:
+
+```erlang
+compile() ->
+  compile:forms(module_from_routes(routes())).
+```
+
+This encodes routes as data and allows us to provide the same optimizations
+and heuristics as macros. The above is still performing meta-programming,
+but using a different approach other than macros. Generally speaking,
+there are many ways to meta-program. We have seen how macros are integrated
+into the compiler, but it also matters how meta-programming is integrated into
+build tools.
+
+### Meta-programming aware build tools
+
+Another example of how compiler macros can improve compilation times is via
+build-tool integration.
+
+For example, let's look at how
+[Unicode generation is done in Erlang](https://github.com/erlang/otp/blob/master/lib/stdlib/uc_spec/gen_unicode_mod.escript)
+or how [type safe SQL is emitted by Gleam](https://github.com/giacomocavalieri/squirrel).
+In both cases, you have to run an Erlang or Gleam program that parses a source
+file in disk, such as the Unicode standard or SQL files, and then emits either
+Erlang source and Gleam source. Then you proceed to compile the emitted program
+as usual.
+
+For Erlang/Unicode, this means invoking two separate programs:
+
+    [     Erlang program    ] --> [           Erlang compiler          ]
+    Unicode --> Erlang Source     Erlang Source --> Erlang AST --> .beam
+
+For Gleam/SQL, this means invoking three separate programs:
+
+    [  Gleam program   ] --> [       Gleam compiler       ] --> [           Erlang compiler          ]
+    SQL --> Gleam Source     Gleam Source --> Erlang Source     Erlang Source --> Erlang AST --> .beam
+
+However, because Elixir programs can emit code during compilation, [Elixir's
+Unicode compilation](https://github.com/elixir-lang/elixir/blob/main/lib/elixir/unicode/unicode.ex)
+is effectively a single program:
+
+    [           Elixir program/compiler           ]
+    Unicode --> Elixir AST --> Erlang AST --> .beam
+
+Effectively, all three languages are meta-programming (they are writing code that
+emits code), the difference is that Elixir does it through Elixir AST, while Erlang
+and Gleam do it via textual/source translation. For these reasons, Elixir requires
+fewest intermediate representations and fewest program invocations. Elixir goes as
+far as integrating [external resources into its build tool](https://elixir.hexdocs.pm/Module.html#module-external_resource),
+so Elixir knows exactly what to recompile whenever a SQL/Unicode file changes.
+
+Note the analysis above is not meant to be a criticism to how Unicode or SQL generation
+is done in Erlang or Gleam. Rather, our goal is to highlight that, while compiler macros
+can be abused by emitting unneeded code, they can also be used to augment compiler
+and build tool performance.
