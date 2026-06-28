@@ -263,7 +263,7 @@ a macro is minimal.
 The cost of macros come from the amount of code it generates/returns.
 It is possible to write macros that generate a lot of code which will
 have a negative impact on compile-time (which is in itself an
-[anti-pattern](https://elixir.hexdocs.pm/macro-anti-patterns.html#large-code-generation).
+[anti-pattern](https://elixir.hexdocs.pm/macro-anti-patterns.html#large-code-generation)).
 On the other hand, macros can also be used to improve compilation times,
 either by treating code as data or by integrating it into the compiler.
 We will explore both scenarios next.
