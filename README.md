@@ -353,12 +353,12 @@ file in disk, such as the Unicode standard or SQL files, and then emits either
 Erlang source and Gleam source. Then you proceed to compile the emitted program
 as usual.
 
-For Erlang/Unicode, this means invoking two separate programs:
+For Erlang/Unicode, this means invoking two programs:
 
     [     Erlang program    ] --> [           Erlang compiler          ]
     Unicode --> Erlang Source     Erlang Source --> Erlang AST --> .beam
 
-For Gleam/SQL, this means invoking three separate programs:
+For Gleam/SQL, this means invoking three programs:
 
     [  Gleam program   ] --> [       Gleam compiler       ] --> [           Erlang compiler          ]
     SQL --> Gleam Source     Gleam Source --> Erlang Source     Erlang Source --> Erlang AST --> .beam
@@ -378,6 +378,8 @@ far as integrating [external resources into its build tool](https://elixir.hexdo
 so Elixir knows exactly what modules to recompile whenever a SQL/Unicode file changes.
 
 Note the analysis above is not meant to be a criticism of how Unicode or SQL generation
-is done in Erlang or Gleam. Rather, our goal is to highlight that, while compiler macros
+is done in Erlang or Gleam. Rather, our goal is to show that, while compiler macros
 can be abused by emitting unneeded code, they can also be used to augment compiler
-and build tool performance.
+and build tool performance. Adding macros to a language comes with a series of
+trade-offs that need to be evaluated per language. In this addendum we only explore
+macros from the compiler angle.
