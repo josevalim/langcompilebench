@@ -41,12 +41,12 @@ $ rm -rf _build && rebar3 get-deps && time rebar3 eunit
 >
 > When you invoke `gleam compile`, it emits `.erl` and not `.beam` files.
 > Given both `mix` and `rebar3` emit `.beam` files, an apples-to-apples
-> comparison should measure the time to generate *executable artifacts*.
-> We picked the time to start an empty test suite as the source of the
-> benchmarks below. The added benefit is that we also measure the time
-> of a very common workflow during develpoment (which is testing).
-> Other measurements are welcome as long as the artifacts produced are
-> the same.
+> comparison should measure the time to generate *executable artifacts*,
+> and one way to do across all three build tools is by running an empty
+> test suite. The added benefit of said choice is that we also measure
+> the time of a common workflow during development (which is running tests).
+> Contributions for additional measurements are welcome as long as the
+> artifacts produced are the same.
 
 On a MacStudio M1, the following values are reported (average
 of 5 runs):
