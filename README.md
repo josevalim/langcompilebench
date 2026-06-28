@@ -128,8 +128,8 @@ When it comes to cycles, Gleam cannot have cycles between modules,
 while Erlang and Elixir allow so (as long as the cycles are not exclusively
 made of compile-time edges). However, the cycles do not change how compile-time
 and runtime dependencies propagate: even if A100 depends on A1, forming a cycle,
-and A51 depends on A52 at compile-time, changing A100 will still only cause
-A51 to recompile.
+changing a file will only cause compile-time dependencies to recompile, and not
+the whole cycle.
 
 Overall:
 
