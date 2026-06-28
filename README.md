@@ -36,14 +36,26 @@ $ rebar3 eunit
 $ rm -rf _build && rebar3 get-deps && time rebar3 eunit
 ```
 
+> [!IMPORTANT]
+> #### Why start the test suite?
+>
+> When you invoke `gleam compile`, it emits `.erl` and not `.beam` files.
+> Given both `mix` and `rebar3` emit `.beam` files, an apples-to-apples
+> comparison should measure the time to generate *executable artifacts*.
+> We picked the time to start an empty test suite as the source of the
+> benchmarks below. The added benefit is that we also measure the time
+> of a very common workflow during develpoment (which is testing).
+> Other measurements are welcome as long as the artifacts produced are
+> the same.
+
 On a MacStudio M1, the following values are reported (average
 of 5 runs):
 
 | Language | Time on Erlang/OTP 28 |
 |----------|-----------------------|
 | Elixir v1.19 | ~0.73s |
-| Elixir v1.20-rc.2 | ~0.63s |
-| Elixir v1.20-rc.2 ([interpreted defmodule](https://github.com/elixir-lang/elixir/pull/15087)) | ~0.58s |
+| Elixir v1.20 | ~0.63s |
+| Elixir v1.20 ([interpreted defmodule](https://github.com/elixir-lang/elixir/pull/15087)) | ~0.58s |
 | Erlang (`rebar3`) | ~0.72s |
 | Gleam v1.14 | ~0.71s |
 
@@ -62,7 +74,7 @@ Here are the updated measurements:
 As you can see, the pull request improved the timing across
 the board! 🎉
 
-At the time of writing, Elixir v1.20-rc.2 yields the best results
+At the time of writing, Elixir v1.20 yields the best results
 across both Erlang/OTP versions, with the new [interpreted module
 definition](https://github.com/elixir-lang/elixir/pull/15087)
 as more than 20% faster. Of course, this doesn't mean an Elixir
