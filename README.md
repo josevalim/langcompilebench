@@ -248,8 +248,9 @@ triggers fewer recompilations than Gleam).
 The tree above helps illustrate how Elixir, by distinguishing between
 compile-time and runtime dependencies, can reduce the amount of work
 on each incremental compilation. Gleam requires on average to recompile
-more files, as changes always forces callers to recompile, perhaps due
-to type reconstruction.
+more files, as changes always forces callers to recompile, most likely
+due to type reconstruction. Erlang projects have the most efficient
+incremental compilation.
 
 ## Addendum: compilation cost of macros
 
