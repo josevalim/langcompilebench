@@ -76,12 +76,14 @@ the board! 🎉
 
 At the time of writing, Elixir v1.20 yields the best results
 across both Erlang/OTP versions, with the new [interpreted module
-definition](https://github.com/elixir-lang/elixir/pull/15087)
-as more than 20% faster. Of course, this doesn't mean an Elixir
-project will compile faster than an equally sized project in Gleam
-or Erlang, as there are additional variables beyond raw compiler
-performance, but it does provide a baseline for comparisons and
-future optimizations.
+definition](https://github.com/elixir-lang/elixir/pull/15087).
+Of course, this doesn't mean an Elixir project will compile faster
+than an equally sized project in Gleam or Erlang, as there are
+additional variables beyond raw compiler performance, but it does
+provide a baseline for comparisons and future optimizations.
+Theoretically speaking, `rebar3` should provide the best performance
+of them all, so I hope these results can lead to additional
+improvements on their end too!
 
 ## `incremental_{language}`
 
