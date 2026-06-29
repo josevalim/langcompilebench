@@ -1,18 +1,15 @@
 # Compilation time benchmarks of BEAM languages
 
-This repository contains synthetic benchmarks of compilation times
-across BEAM languages (currently Elixir, Erlang, and Gleam), with the goal
-to publicly quantify performance claims.
+This repository contains synthetic benchmarks of compilation and build times
+across BEAM languages (currently Elixir/Mix, Erlang/rebar3, and Gleam),
+with the goal to publicly quantify performance claims.
 
 ## `benchmark_{language}`
 
 It measures the time to compile 100 independent modules with 100 hello
 world functions each, boot the application, and run a minimal test suite.
 
-We list the steps for each language. The goal is measure the time to
-compile the project after dependencies have been analyzed and compiled.
-
-To compute times in Gleam:
+We list the steps for each language. To compute times in Gleam:
 
 ``` 
 $ cd benchmark_gleam
@@ -40,11 +37,16 @@ $ rm -rf _build && rebar3 get-deps && time rebar3 eunit
 > #### Why start the test suite?
 >
 > When you invoke `gleam compile`, it emits `.erl` and not `.beam` files.
-> Given both `mix` and `rebar3` emit `.beam` files, an apples-to-apples
-> comparison should measure the time to generate *executable artifacts*,
-> and one way to do across all three build tools is by running an empty
-> test suite. The added benefit of said choice is that we also measure
-> the time of a common workflow during development (which is running tests).
+> We could compare it against the times both `elixirc` or `erlc` use to
+> emit intermediate representations but those are not common workloads.
+>
+> For this reason, we choose to measure how long it takes to generate
+> *executable artifacts* for a given project. One day to do so across
+> all three languages by running an empty test suite of an existing project.
+> This means the time to parse project files is also included.
+>
+> The added benefit of said choice is that we also measure the time of a
+> common workflow during development (which is running tests).
 > Contributions for additional measurements are welcome as long as the
 > artifacts produced are the same.
 
