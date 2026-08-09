@@ -41,7 +41,7 @@ $ rm -rf _build && rebar3 get-deps && time rebar3 eunit
 > emit intermediate representations but those are not common workloads.
 >
 > For this reason, we choose to measure how long it takes to generate
-> *executable artifacts* for a given project. One day to do so across
+> *executable artifacts* for a given project. One way to do so across
 > all three languages by running an empty test suite of an existing project.
 > This means the time to parse project files is also included.
 >
@@ -378,12 +378,12 @@ is effectively a single program:
 Effectively, all three languages are meta-programming (they are writing code that
 emits code), the difference is that Elixir does it through Elixir AST, while Erlang
 and Gleam do it via textual/source translation. For these reasons, Elixir requires
-fewest intermediate representations and fewest program invocations. Elixir goes as
-far as integrating [external resources into its build tool](https://elixir.hexdocs.pm/Module.html#module-external_resource),
-so Elixir knows exactly what modules to recompile whenever a SQL/Unicode file changes.
+fewest intermediate representations and fewest program invocations. It is also possible
+to achieve similar results as Elixir in Erlang via the user of parse-transforms,
+although they are generally discouraged.
 
-Note the analysis above is not meant to be a criticism of how Unicode or SQL generation
-is done in Erlang or Gleam. Rather, our goal is to show that, while compiler macros
+The analysis above is not meant to be a criticism of how Unicode or SQL generation
+is done in any of these languages. Rather to show that, while compiler macros
 can be abused by emitting unneeded code, they can also be used to augment compiler
 and build tool performance. Adding macros to a language comes with a series of
 trade-offs that need to be evaluated per language. In this addendum we only explore
