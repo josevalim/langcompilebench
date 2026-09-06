@@ -43,10 +43,6 @@ On a MacStudio M1, the following values are reported (average of 5 runs):
 | Gleam v1.18 | ~0.44s |
 
 Gleam comes first with Elixir in interpreted mode close in second.
-The likely reason Gleam comes ahead is because it doesn't need to
-fully boot the Erlang VM, only its compiler subset, in contrast to
-`rebar3` and `mix`.
-
 This benchmark also shows there is room for improvements in `rebar3`,
 as we should expect it to be in the same ballpark as `mix`.
 
@@ -91,7 +87,9 @@ On a MacStudio M1, the following values are reported (average of 5 runs):
 | Gleam v1.18 | ~0.67s |
 
 As you can see, both Erlang and Elixir jump ahead, likely because
-Gleam has to boot the Erlang VM separately to run tests.
+Gleam has to boot the Erlang VM twice, once to compile, and then
+again to run tests, which `rebar3` and `mix` does it within a
+single instance.
 
 ## `incremental_{language}`
 
