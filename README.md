@@ -150,7 +150,7 @@ easier to visualize those dependencies.
 
 ### Incremental compilation averages
 
-To try to better visualize the impact of dependencies in different languages,
+In order to better visualize the impact of dependencies in different languages,
 let's consider a small tree. We will use a balanced tree to simplify the example.
 
 Imagine you have a file structure where A1/A2/A3 depends on A which depends on
@@ -177,7 +177,7 @@ A1/A2/A3 are recompiled. And so on. So if you change a file at random, the avera
 amount of files recompiled per change is `(13 + 3*4 + 9*1) / 13`, which is 2.61.
 
 However, in Elixir, only compile-time dependencies are recompiled, so if you have no
-compile-time dependnecy, the default average is 1 (the same as Erlang). But apps will
+compile-time dependency, the default average is 1 (the same as Erlang). But apps will
 certainly have compile-time dependencies too, so let's imagine `A`, `B`, and `C` depend
 on `R` as a compile-time dependency (like Phoenix apps all have `use MyAppWeb, :controller`)
 and mark it in red. We end-up with this:
@@ -200,56 +200,21 @@ graph BT
     linkStyle 9,10,11 stroke:red
 ```
 
-This makes it so 3 out of 12 edges are compile-time edges.
+This makes it so 3 out of 12 edges (25%) are compile-time edges.
 
 > For comparison purposes, the [Livebook](https://github.com/livebook-dev/livebook)
 > project has a ratio of 17% compile-time edges per runtime ones,
-> so the rate above of 25% is higher than the one found in real-world project.
+> so the rate above of 25% we are using for the simulation above is higher than
+> the one found in real-world project, working as an upper bound.
 
 Now, when R changes, it compiles A, B, and C, but that's the only change. This is
-because any runtime dependency stops the compilation from propagating. Our
+because any runtime dependency stops the compilation from propagating. Elixir's
 recompilations per file average then becomes `(4 + 3*1 + 9*1) / 13`, which is 1.23.
 Less than half of Gleam's.
 
-But what happens if we introduce a cycle? Let's say that R depends on C2:
-
-```mermaid
-graph BT
-    A1 --> A
-    A2 --> A
-    A3 --> A
-    B1 --> B
-    B2 --> B
-    B3 --> B
-    C1 --> C
-    C2 --> C
-    C3 --> C
-    A -->|compile| R
-    B -->|compile| R
-    C -->|compile| R
-    R --> C2
-    linkStyle 9,10,11 stroke:red
-```
-
-What this means is that, anything in that path (C and C2) will trigger R,
-so now we have the following dependencies is:
-
-* R changes, we compile: R, A, B, C
-* C changes, we compile: A, B, C
-* C2 changes, we compile: A, B, C, C2
-
-Everything else stays the same, so we have `(4 + 3 + 4 + 10) / 13`,
-which is 1.61 and still well below Gleam's average for this tree.
-
-> When R depends on C2, we have a so-called compile-connected dependency,
-> and [we have tooling in `mix` to help find them](https://hexdocs.pm/mix/Mix.Tasks.Xref.html)!
-
-Even if we made A2 and B2 cycles, similar to C2, the average is 2.4
-and still below Gleam's. For comparison purposes, the Livebook project
-at the time of writing has 300 files and a single compile-time cycle
-with 2 compile-time edges, so it is unlikely for a tree with 13 files
-to have 3 cycles with 3 compile-time dependencies each (which still
-triggers fewer recompilations than Gleam).
+Cycles don't change the evaluation because any runtime dependency in the cycle still
+stops the propagation and a cycle of compile-time dependencies is not possible, as
+it will deadlock compilation by definition.
 
 The tree above helps illustrate how Elixir, by distinguishing between
 compile-time and runtime dependencies, can reduce the amount of work
