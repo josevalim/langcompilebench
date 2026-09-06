@@ -88,7 +88,7 @@ On a MacStudio M1, the following values are reported (average of 5 runs):
 
 As you can see, both Erlang and Elixir jump ahead, likely because
 Gleam has to boot the Erlang VM twice, once to compile, and then
-again to run tests, which `rebar3` and `mix` does it within a
+again to run tests, while `rebar3` and `mix` do it within a
 single instance.
 
 ## `incremental_{language}`
