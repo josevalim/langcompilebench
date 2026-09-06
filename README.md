@@ -4,15 +4,63 @@ This repository contains synthetic benchmarks of compilation and build times
 across BEAM languages (currently Elixir/Mix, Erlang/rebar3, and Gleam),
 with the goal to publicly quantify performance claims.
 
-## `benchmark_{language}`
+## `benchmark_{language}` (compilation)
 
 It measures the time to compile 100 independent modules with 100 hello
-world functions each, boot the application, and run a minimal test suite.
+world functions each. We list the steps for each language.
 
-We list the steps for each language. To compute times in Gleam:
+To compute times in Gleam:
 
 ``` 
 $ cd benchmark_gleam
+$ rm -rf test
+$ rm -rf build && time gleam build
+```
+
+To compute times in Elixir:
+
+```
+$ cd benchmark_elixir
+$ mix compile
+$ rm -rf _build && time mix compile
+```
+
+To compute times in Erlang:
+
+```
+$ cd benchmark_erlang
+$ rebar3 compile
+$ rm -rf _build && rebar3 get-deps && time rebar3 compile
+```
+
+On a MacStudio M1, the following values are reported (average of 5 runs):
+
+| Language | Time on Erlang/OTP 29 |
+|----------|-----------------------|
+| Elixir v1.20 | ~0.53s |
+| Elixir v1.20 ([interpreted defmodule](https://github.com/elixir-lang/elixir/pull/15087)) | ~0.48s |
+| Erlang (`rebar3`) | ~0.64s |
+| Gleam v1.18 | ~0.44s |
+
+Gleam comes first with Elixir in interpreted mode close in second.
+The likely reason Gleam comes ahead is because it doesn't need to
+fully boot the Erlang VM, only its compiler subset, in contrast to
+`rebar3` and `mix`.
+
+This benchmark also shows there is room for improvements in `rebar3`,
+as we should expect it to be in the same ballpark as `mix`.
+
+## `benchmark_{language}` (test)
+
+It measures the time to compile 100 independent modules with 100 hello
+world functions each and then boot the application and run the test suite.
+The goal of this benchmark is to show a common workflow during development.
+
+To compute times in Gleam, first uncomment the dev-dependencies in gleam.toml and then:
+
+```
+$ cd benchmark_gleam
+$ git checkout test
 $ gleam test
 $ rm -rf build/dev/erlang/benchmark_gleam/ && time gleam test
 ```
@@ -29,63 +77,21 @@ To compute times in Erlang:
 
 ```
 $ cd benchmark_erlang
-$ rebar3 eunit
+$ rebar3 compile
 $ rm -rf _build && rebar3 get-deps && time rebar3 eunit
 ```
 
-> [!IMPORTANT]
-> #### Why start the test suite?
->
-> When you invoke `gleam compile`, it emits `.erl` and not `.beam` files.
-> We could compare it against the times both `elixirc` or `erlc` use to
-> emit intermediate representations but those are not common workloads.
->
-> For this reason, we choose to measure how long it takes to generate
-> *executable artifacts* for a given project. One way to do so across
-> all three languages by running an empty test suite of an existing project.
-> This means the time to parse project files is also included.
->
-> The added benefit of said choice is that we also measure the time of a
-> common workflow during development (which is running tests).
-> Contributions for additional measurements are welcome as long as the
-> artifacts produced are the same.
-
-On a MacStudio M1, the following values are reported (average
-of 5 runs):
-
-| Language | Time on Erlang/OTP 28 |
-|----------|-----------------------|
-| Elixir v1.19 | ~0.73s |
-| Elixir v1.20 | ~0.63s |
-| Elixir v1.20 ([interpreted defmodule](https://github.com/elixir-lang/elixir/pull/15087)) | ~0.58s |
-| Erlang (`rebar3`) | ~0.72s |
-| Gleam v1.14 | ~0.71s |
-
-Additionally, [I have recently pushed a patch which improves
-boot times in Erlang/OTP](https://github.com/erlang/otp/pull/10615).
-Here are the updated measurements:
+On a MacStudio M1, the following values are reported (average of 5 runs):
 
 | Language | Time on Erlang/OTP 29 |
 |----------|-----------------------|
-| Elixir v1.19 | ~0.65s |
-| Elixir v1.20-rc.2 | ~0.55s |
-| Elixir v1.20-rc.2 ([interpreted defmodule](https://github.com/elixir-lang/elixir/pull/15087)) | ~0.50s |
+| Elixir v1.20 | ~0.55s |
+| Elixir v1.20 ([interpreted defmodule](https://github.com/elixir-lang/elixir/pull/15087)) | ~0.50s |
 | Erlang (`rebar3`) | ~0.64s |
-| Gleam v1.14 | ~0.67s |
+| Gleam v1.18 | ~0.67s |
 
-As you can see, the pull request improved the timing across
-the board! 🎉
-
-At the time of writing, Elixir v1.20 yields the best results
-across both Erlang/OTP versions, with the new [interpreted module
-definition](https://github.com/elixir-lang/elixir/pull/15087).
-Of course, this doesn't mean an Elixir project will compile faster
-than an equally sized project in Gleam or Erlang, as there are
-additional variables beyond raw compiler performance, but it does
-provide a baseline for comparisons and future optimizations.
-Theoretically speaking, `rebar3` should provide the best performance
-of them all, so I hope these results can lead to additional
-improvements on their end too!
+As you can see, both Erlang and Elixir jump ahead, likely because
+Gleam has to boot the Erlang VM separately to run tests.
 
 ## `incremental_{language}`
 
