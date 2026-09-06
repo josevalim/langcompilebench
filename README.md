@@ -383,12 +383,11 @@ Effectively, all three languages are meta-programming (they are writing code tha
 emits code), the difference is that Elixir does it through Elixir AST, while Erlang
 and Gleam do it via textual/source translation. For these reasons, Elixir requires
 fewest intermediate representations and fewest program invocations. It is also possible
-to achieve similar results as Elixir in Erlang via the user of parse-transforms,
+to achieve similar results as Elixir in Erlang via the use of parse-transforms,
 although they are generally discouraged.
 
 The analysis above is not meant to be a criticism of how Unicode or SQL generation
 is done in any of these languages. Rather to show that, while compiler macros
 can be abused by emitting unneeded code, they can also be used to augment compiler
-and build tool performance. Adding macros to a language comes with a series of
-trade-offs that need to be evaluated per language. In this addendum we only explore
-macros from the compiler angle.
+and build tool performance. In this addendum we only explore macros from the compiler
+angle.
